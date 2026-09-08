@@ -83,20 +83,29 @@ by_product = orders.groupBy("product_id").agg(
     F.sum("amount").alias("revenue"),
     F.sum("quantity").alias("sold_quantity"),
 )
+by_product.explain()
 by_product.orderBy("product_id").show()
 
-
 # 집계함수에 파싱칼럼을 생성합니다.(.withCalum())
-by_product = orders.groupBy("product_id").agg(
+by_product2 = orders.groupBy("product_id").agg(
     F.count("*").alias("order_count"),
     F.sum("amount").alias("revenue"),
     F.sum("quantity").alias("sold_quantity"),
 ).withColumn(
     "average_order_amount", F.col("revenue") / F.col("order_count")
 )
-by_product.orderBy("product_id").show()
+by_product2.explain()
+by_product2.orderBy("product_id").show()
 
 
-# 커넥션 열기
+
+totals = {}
+for product_id, amount in rows:
+    old_count, old_revenue = totals.get(product_id, (0, 0))
+    totals[product_id] = (old_count + 1, old_revenue + amount)
+
+print(totals)
+
+# 커넥션 끊기
 spark.stop()
 
