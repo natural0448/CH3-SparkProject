@@ -95,6 +95,19 @@ by_product = orders.groupBy("product_id").agg(
 by_product.explain()
 by_product.orderBy("product_id").show()
 
+print("로그기록을 확인해주세요!")
+logs = spark.read.text((data_dir / "raw" / "access.log").as_uri())
+# logs.show(truncate=False)
+log_pattern = r"^(\S+) (\S+) (\S+) (\d+) (\d+)$"
+
+extracted = logs.select(
+    F.regexp_extract("value", log_pattern, 1).alias("requested_at_text"),
+    F.regexp_extract("value", log_pattern, 2).alias("method"),
+    F.regexp_extract("value", log_pattern, 3).alias("path"),
+)
+extracted.show(truncate=False)
+
+
 # 집계함수에 파싱칼럼을 생성합니다.(.withCalum())
 by_product2 = orders.groupBy("product_id").agg(
     F.count("*").alias("order_count"),
