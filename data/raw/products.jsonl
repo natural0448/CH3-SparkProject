@@ -1,2 +1,4 @@
 {"product_id": "A", "name": "커피", "category": "음료"}
 {"product_id": "B", "name": "빵", "category": "식품"}
+{"product_id": "C", "name": "주스", "category": "음료"}
+{"product_id": "D", "name": "조각케이크", "category": "식품"}

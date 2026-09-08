@@ -43,19 +43,11 @@ orders = (
 )
 
 # orders에서 특정 컬럼만 조회하기.
-orders.select("order_id", "product_id", "quantity", "amount", "order_date").show()\
+orders.select("order_id", "product_id", "quantity", "amount", "order_date").show()
 # where절처럼 필터링 한 후, .select로 조회하기
 orders.filter(F.col("product_id") == "B").select("quantity", "amount", "order_date").show()
 #products는 조건 없이 그냥 다 조회하여 보여주기
 products.show()
-
-preview = [
-    row.asDict()
-    for row in orders.select("order_id", "product_id", "quantity", "amount")
-    .orderBy("order_id")
-    .limit(10)
-    .collect()
-]
 
 # started = perf_counter()
 # measured_orders = (
@@ -64,33 +56,21 @@ preview = [
 #     .withColumn("amount", F.col("quantity") * F.col("unit_price"))
 # )
 
-summary = {
-    "generated_at": datetime.now(ZoneInfo("Asia/Seoul")).isoformat(),
-    "order_count": orders.count(),
-    "preview": preview,
-    "by_product": [],
-    "by_day": [],
-    "page_views": [],
-    "by_category": [],
-}
-
-output_dir = data_dir / "marts"
-output_dir.mkdir(parents=True, exist_ok=True)
-
-with (output_dir / "dashboard.json").open("w", encoding="utf-8") as stream:
-    json.dump(summary, stream, ensure_ascii=False, indent=2)
-
-
-output_dir = data_dir / "marts"
-output_dir.mkdir(parents=True, exist_ok=True)
-with (output_dir / "dashboard.json").open("w", encoding="utf-8") as stream:
-    json.dump(summary, stream, ensure_ascii=False, indent=2)
-
-# 집계함수를 활용해서 상품별 매출총액을 구합니다.
-by_product = orders.groupBy("product_id").agg(
+# 주문 횟수는 주문 행 수이며, 판매 수량과 구분합니다.
+product_totals = orders.groupBy("product_id").agg(
     F.count("*").alias("order_count"),
     F.sum("amount").alias("revenue"),
     F.sum("quantity").alias("sold_quantity"),
+)
+# 상품 목록을 연결해 새로 등록한 메뉴도 표시합니다.
+# full 조인은 상품 정보가 빠진 입력에서도 기존 주문 집계를 보존합니다.
+by_product = (
+    products.join(product_totals, on="product_id", how="full")
+    .fillna(0, subset=["order_count", "revenue", "sold_quantity"])
+    .withColumn(
+        "average_order_amount",
+        F.when(F.col("order_count") > 0, F.col("revenue") / F.col("order_count")),
+    )
 )
 by_product.explain()
 by_product.orderBy("product_id").show()
@@ -107,17 +87,37 @@ extracted = logs.select(
 )
 extracted.show(truncate=False)
 
+parsed = logs.select(
+    F.to_timestamp(F.regexp_extract("value", log_pattern, 1)).alias("requested_at"),
+    F.regexp_extract("value", log_pattern, 2).alias("method"),
+    F.regexp_extract("value", log_pattern, 3).alias("path"),
+    F.regexp_extract("value", log_pattern, 4).cast("int").alias("status"),
+    F.regexp_extract("value", log_pattern, 5).cast("long").alias("duration_ms"),
 
-# 집계함수에 파싱칼럼을 생성합니다.(.withCalum())
-by_product2 = orders.groupBy("product_id").agg(
+).withColumn("visit_date", F.date_format("requested_at", "yyyy-MM-dd"))
+
+page_views = parsed.groupBy("visit_date").agg(
+    F.count("*").alias("page_views")
+)
+
+by_day = orders.groupBy("order_date").agg(
     F.count("*").alias("order_count"),
     F.sum("amount").alias("revenue"),
-    F.sum("quantity").alias("sold_quantity"),
-).withColumn(
-    "average_order_amount", F.col("revenue") / F.col("order_count")
-)
-by_product2.explain()
-by_product2.orderBy("product_id").show()
+).withColumn("order_date", F.col("order_date").cast("string"))
+
+parsed.select("visit_date", "path", "status", "duration_ms").show()
+page_views.orderBy("visit_date").show()
+by_day.orderBy("order_date").show()
+
+# 세 집계를 모두 만든 다음 미리보기와 JSON 저장 데이터를 준비합니다.
+preview = [
+    row.asDict()
+    for row in orders.select("order_id", "product_id", "quantity", "amount")
+    .orderBy("order_id")
+    .limit(10)
+    .collect()
+]
+
 
 # measured_summary = measured_orders.groupBy("product_id").agg(
 #     F.sum("amount").alias("revenue"),
@@ -126,6 +126,22 @@ by_product2.orderBy("product_id").show()
 # print("읽기·집계·결과 수신 초:", perf_counter() - started)
 # print(result)
 
-# 커넥션 끊기
-spark.stop()
+# summary는 위에서 만든 집계와 preview를 사용하므로 이 위치에 둡니다.
+summary = {
+    "generated_at": datetime.now(ZoneInfo("Asia/Seoul")).isoformat(),
+    "order_count": orders.count(),
+    "preview": preview,
+    "by_product": [row.asDict() for row in by_product.orderBy("product_id").collect()],
+    "by_day": [row.asDict() for row in by_day.orderBy("order_date").collect()],
+    "page_views": [row.asDict() for row in page_views.orderBy("visit_date").collect()],
+    "by_category": [],
+}
+summary["generated_at"] = datetime.now(ZoneInfo("Asia/Seoul")).isoformat(timespec="seconds")
 
+output_dir = data_dir / "marts"
+output_dir.mkdir(parents=True, exist_ok=True)
+with (output_dir / "dashboard.json").open("w", encoding="utf-8") as stream:
+    json.dump(summary, stream, ensure_ascii=False, indent=2)
+
+# 모든 집계와 JSON 저장을 마친 뒤 마지막에 Spark를 종료합니다.
+spark.stop()

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load l10n %}
 {% block title %}메뉴 · 주문 | SLOW CUP{% endblock %}
 {% block content %}
   <section class="hero" aria-labelledby="menu-title">
@@ -31,12 +32,12 @@
             <svg role="img" aria-label="{{ product.name }} 일러스트"><use href="{% if product.category == '식품' %}#art-bread{% else %}#art-coffee{% endif %}"/></svg>
           </div>
           <div class="menu-body">
-            <span class="eyebrow" style="font-size:8px;letter-spacing:1px">{{ product.category }}</span>
+            <span class="eyebrow" style="font-size:8px;letter-spacing:1px">{{ product.category }} · 메뉴 {{ product.id }}</span>
             <h3>{{ product.name }}</h3>
             <p class="menu-description">{% if product.category == '음료' %}잠깐의 쉼과 함께하는 한 잔.{% elif product.category == '식품' %}커피 곁에 두고 싶은 작은 행복.{% else %}오늘의 순간에 더하는 즐거움.{% endif %}</p>
             <div class="menu-bottom">
-              <span class="price"><span data-money="{{ product.unit_price }}">{{ product.unit_price }}</span><small>원</small></span>
-              <button class="select-menu" type="button" data-select-product="{{ product.id }}" aria-label="{{ product.name }} 선택" aria-pressed="false"><span>선택하기</span><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></button>
+              <span class="price"><span data-money="{{ product.unit_price|unlocalize }}">{{ product.unit_price }}</span><small>원</small></span>
+              <button class="select-menu" type="button" data-select-product="{{ product.id }}" aria-label="{{ product.name }} ({{ product.id }}) 선택" aria-pressed="false"><span>선택하기</span><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></button>
             </div>
           </div>
         </article>
@@ -55,7 +56,9 @@
         <label class="field-label" for="order-product">어떤 메뉴로 시작할까요?</label>
         <select class="menu-select" id="order-product" name="product_id" required>
           <option value="">메뉴를 선택해 주세요</option>
-          {% for product in products %}<option value="{{ product.id }}" data-name="{{ product.name }}" data-price="{{ product.unit_price }}" {% if selected_product_id == product.id %}selected{% endif %}>{{ product.name }} · {{ product.unit_price }}원</option>{% endfor %}
+          {% for product in products %}
+          <option value="{{ product.id }}" data-name="{{ product.name }} ({{ product.id }})" data-price="{{ product.unit_price|unlocalize }}" {% if selected_product_id == product.id %}selected{% endif %}>{{ product.name }} ({{ product.id }}) · {{ product.unit_price }}원</option>
+          {% endfor %}
         </select>
         <div class="quantity-row">
           <label class="small" for="order-quantity">수량</label>

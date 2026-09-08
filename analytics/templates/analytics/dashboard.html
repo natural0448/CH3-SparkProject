@@ -1,32 +1,251 @@
 {% extends 'base.html' %}
+{% load l10n %}
 {% block title %}매장 리포트 | SLOW CUP{% endblock %}
+
+{% block extra_head %}
+<style>
+  .report-heading h1,.report-heading p,.report-metrics .metric-caption{word-break:keep-all}
+  .report-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+  .report-refresh-note{font-size:10px!important;word-break:keep-all}
+  .report-time{font-size:17px;line-height:1.8;letter-spacing:-.4px;overflow-wrap:anywhere}
+  .report-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:24px;align-items:start}
+  .report-sections{display:grid;gap:22px;min-width:0}
+  .report-split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;align-items:stretch}
+  .report-card{min-width:0;display:flex;flex-direction:column}
+  .report-card .surface-header{align-items:flex-start;flex-wrap:wrap;gap:12px;padding:23px 24px 20px}
+  .report-kicker{display:block;font-size:9px;font-weight:700;letter-spacing:1.6px;color:var(--orange);margin-bottom:8px}
+  .report-card .surface-header h2{display:flex;align-items:center;gap:9px;line-height:1.5;word-break:keep-all}
+  .report-card .surface-header h2 .icon{width:18px;height:18px;color:#728565}
+  .report-card .surface-header p{margin-top:5px;word-break:keep-all}
+  .report-card .snapshot-tag{margin-top:2px;white-space:nowrap}
+  .report-table th,.report-table td{padding-left:22px;padding-right:22px}
+  .report-table .number{text-align:right;font-variant-numeric:tabular-nums}
+  .report-table .number strong{font-weight:700;color:var(--ink)}
+  .report-unit{font-size:10px;font-weight:400;color:var(--muted);margin-left:4px}
+  .report-product{display:flex;align-items:center;gap:10px;color:var(--ink)}
+  .report-product .mini-menu-icon{width:32px;height:32px}
+  .report-product .mini-menu-icon .icon{width:17px;height:17px}
+  .report-product-name{font-weight:650}
+  .report-products-table,.report-preview-table{min-width:460px}
+  .report-split .report-table{min-width:290px}
+  .report-split .report-table th,.report-split .report-table td{padding-left:18px;padding-right:18px}
+  .report-split .report-table td{height:61px}
+  .report-date{font-size:11px;font-variant-numeric:tabular-nums;color:var(--ink)}
+  .report-visits{display:inline-flex;align-items:baseline;gap:4px;padding:4px 10px;border-radius:6px;background:var(--sage);color:var(--ink);font-weight:700}
+  .report-visits .report-unit{margin:0;color:#607452}
+  .report-card .surface-footer{margin-top:auto;padding:14px 22px;flex-wrap:wrap;gap:4px 12px;line-height:1.8;word-break:keep-all}
+  .report-card .report-empty{padding:32px 20px;text-align:center;white-space:normal;color:var(--muted);line-height:1.8;word-break:keep-all}
+  .report-empty strong{display:block;color:var(--ink);font-size:12px;font-weight:600;margin-bottom:4px}
+  .report-empty p{font-size:11px}
+  .report-note{position:sticky;top:24px;background:var(--sage);border:1px solid #e0e7d8;border-radius:var(--radius);padding:27px}
+  .report-note .eyebrow{color:#69815c}
+  .report-note h2{font-size:21px;line-height:1.65;margin:14px 0 4px}
+  .report-note .art{width:100%;height:145px;margin:8px 0 12px}
+  .report-note p{font-size:12px;color:#62765c;line-height:1.9;word-break:keep-all}
+  .report-note .button{margin-top:20px}
+  @media(max-width:1100px){
+    .report-layout{grid-template-columns:minmax(0,1fr) 240px;gap:20px}
+    .report-split{grid-template-columns:1fr}
+    .report-note{padding:23px}
+  }
+  @media(max-width:860px){
+    .report-layout{grid-template-columns:1fr}
+    .report-split{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .report-note{position:static;display:grid;grid-template-columns:minmax(0,1fr) 180px;column-gap:26px}
+    .report-note .art{grid-column:2;grid-row:1/5;align-self:center;margin:0}
+    .report-note .button{justify-self:start}
+  }
+  @media(max-width:620px){
+    .report-actions{align-items:flex-start}
+    .report-split{grid-template-columns:1fr}
+    .report-sections,.report-split{gap:18px}
+    .report-card .surface-header{padding:20px 18px 18px}
+    .report-table th,.report-table td{padding-left:18px;padding-right:18px}
+    .report-card .surface-footer{padding:13px 18px}
+    .report-note{grid-template-columns:minmax(0,1fr) 110px;column-gap:14px}
+    .report-note .art{height:100px;grid-row:1/3}
+    .report-note p,.report-note .button{grid-column:1/-1}
+    .report-note h2{font-size:19px}
+  }
+  @media(max-width:360px){
+    .main-nav{gap:8px}
+    .nav-link{font-size:11px;gap:5px;white-space:nowrap}
+    .nav-link .icon{width:15px;height:15px}
+    .report-split .report-table{min-width:260px}
+    .report-split .report-table th,.report-split .report-table td{padding-left:12px;padding-right:12px}
+    .report-note{display:block}
+    .report-note .art{display:none}
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-  <div class="page-heading"><div><span class="eyebrow">A LOOK AT OUR CAFE</span><h1>우리 카페의 주문 기록.</h1><p>마지막 집계 시점의 주문을 한눈에 살펴보세요.</p></div><button type="button" class="button secondary" id="refresh-report"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>리포트 새로고침</button></div>
-  <div class="metric-grid">
-    <section class="metric featured"><div class="metric-label">집계된 전체 주문<svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg></div><p class="metric-value"><span data-money="{{ summary.order_count }}">{{ summary.order_count }}</span><small>건</small></p><p class="metric-caption">마지막 집계에 포함된 주문 수</p></section>
-    <section class="metric"><div class="metric-label">주문 미리보기<svg class="icon" aria-hidden="true"><use href="#i-cup"/></svg></div><p class="metric-value">{{ summary.preview|length }}<small>건</small></p><p class="metric-caption">주문번호 순으로 최대 10건</p></section>
-    <section class="metric"><div class="metric-label">마지막 집계 시각<svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></div><p class="metric-value" style="font-size:17px;line-height:1.8;letter-spacing:-.4px;overflow-wrap:anywhere"><span data-timestamp="{{ summary.generated_at }}">{{ summary.generated_at }}</span></p><p class="metric-caption">한국 시간 기준</p></section>
+  <div class="page-heading report-heading">
+    <div>
+      <span class="eyebrow">A LOOK AT OUR CAFE</span>
+      <h1>우리 카페의 주문 기록.</h1>
+      <p>마지막 집계 시점의 주문과 매장 소식을 한눈에 살펴보세요.</p>
+    </div>
+    <div class="report-actions">
+      <button type="button" class="button secondary" id="refresh-report" aria-describedby="refresh-note">
+        <svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>리포트 새로고침
+      </button>
+      <p class="report-refresh-note" id="refresh-note">완료된 집계 결과를 다시 불러옵니다.</p>
+    </div>
   </div>
-  <div class="dashboard-layout">
-    <section class="surface" aria-labelledby="report-title">
-      <div class="surface-header"><div><h2 id="report-title">주문 미리보기</h2><p>한 건의 주문에 담긴 메뉴와 금액</p></div><span class="snapshot-tag"><span class="small-dot"></span>집계 결과</span></div>
-      <div class="table-scroll"><table><caption class="sr-only">집계 결과의 주문 미리보기</caption><thead><tr><th scope="col">주문번호</th><th scope="col">메뉴 ID</th><th scope="col">수량</th><th scope="col">주문 금액</th></tr></thead><tbody>
-        {% for row in summary.preview %}
-        <tr><td><span class="order-id">#{{ row.order_id|stringformat:"04d" }}</span></td><td><span class="menu-name">메뉴 {{ row.product_id }}</span></td><td class="mono">{{ row.quantity }}개</td><td><strong class="mono"><span data-money="{{ row.amount }}">{{ row.amount }}</span>원</strong></td></tr>
-        {% endfor %}
-      </tbody></table></div>
-      {% if not summary.preview %}<div class="empty-state"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg><h3>아직 집계된 주문이 없어요</h3><p>첫 집계가 완료되면 주문 기록을 보여드릴게요.</p></div>{% endif %}
-      <div class="surface-footer"><span>{{ summary.preview|length }}건 표시 · 전체 {{ summary.order_count }}건</span><span>주문번호 오름차순</span></div>
+
+  <div class="metric-grid report-metrics" aria-label="마지막 집계 요약">
+    <section class="metric featured">
+      <div class="metric-label">집계된 전체 주문<svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg></div>
+      <p class="metric-value"><span data-money="{{ summary.order_count|unlocalize }}">{{ summary.order_count }}</span><small>건</small></p>
+      <p class="metric-caption">마지막 집계에 포함된 주문 수</p>
     </section>
-    <aside class="insight-note">
-      <span class="eyebrow" style="color:#69815c">FROM CUP TO RECORD</span>
-      <h2>한 잔의 여유가<br>하루의 기록으로.</h2>
+    <section class="metric">
+      <div class="metric-label">주문 미리보기<svg class="icon" aria-hidden="true"><use href="#i-cup"/></svg></div>
+      <p class="metric-value">{{ summary.preview|length }}<small>건</small></p>
+      <p class="metric-caption">주문번호 순으로 최대 10건</p>
+    </section>
+    <section class="metric">
+      <div class="metric-label">마지막 집계 시각<svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></div>
+      <p class="metric-value report-time"><span data-timestamp="{{ summary.generated_at }}">{{ summary.generated_at }}</span></p>
+      <p class="metric-caption">한국 시간 기준</p>
+    </section>
+  </div>
+
+  <div class="report-layout">
+    <div class="report-sections">
+      <section class="surface report-card" aria-labelledby="product-report-title">
+        <div class="surface-header">
+          <div>
+            <span class="report-kicker">BY MENU</span>
+            <h2 id="product-report-title"><svg class="icon" aria-hidden="true"><use href="#i-cup"/></svg>상품별 매출</h2>
+            <p>메뉴마다 쌓인 주문과 매출을 확인해 보세요.</p>
+          </div>
+          <span class="snapshot-tag"><span class="small-dot"></span>리포트 메뉴 {{ summary.by_product|length }}종</span>
+        </div>
+        <span class="table-hint">표를 옆으로 밀면 모든 항목을 볼 수 있어요.</span>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="상품별 매출 표">
+          <table class="report-table report-products-table">
+            <caption class="sr-only">상품별 주문 수, 매출과 평균 주문 금액</caption>
+            <thead><tr><th scope="col">메뉴 · 상품 ID</th><th scope="col" class="number">주문 횟수</th><th scope="col" class="number">매출</th><th scope="col" class="number">평균 주문 금액</th></tr></thead>
+            <tbody>
+              {% for row in summary.by_product %}
+              <tr>
+                <td><div class="report-product"><span class="mini-menu-icon {% if row.category == '식품' %}bakery{% endif %}"><svg class="icon" aria-hidden="true"><use href="#i-bag"/></svg></span><div><span class="report-product-name">{{ row.name|default:row.product_id }}</span><span class="table-sub">상품 {{ row.product_id }}{% if row.category %} · {{ row.category }}{% endif %}</span></div></div></td>
+                <td class="number"><span data-money="{{ row.order_count|unlocalize }}">{{ row.order_count }}</span><span class="report-unit">건</span></td>
+                <td class="number"><strong><span data-money="{{ row.revenue|unlocalize }}">{{ row.revenue }}</span><span class="report-unit">원</span></strong></td>
+                <td class="number">{% if row.order_count %}<span data-money="{{ row.average_order_amount|floatformat:'2u' }}">{{ row.average_order_amount|floatformat:2 }}</span><span class="report-unit">원</span>{% else %}<span class="muted" aria-label="아직 주문이 없어 평균을 계산할 수 없습니다">—</span>{% endif %}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" class="report-empty"><strong>아직 메뉴별 집계가 없어요.</strong><p>집계가 완료되면 메뉴별 주문과 매출을 보여드릴게요.</p></td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="surface-footer"><span>평균 주문 금액 = 매출 ÷ 주문 횟수 · 소수점 둘째 자리까지 표시</span><span>주문이 없는 메뉴의 평균은 —로 표시</span></div>
+      </section>
+
+      <div class="report-split">
+        <section class="surface report-card" aria-labelledby="daily-report-title">
+          <div class="surface-header">
+            <div>
+              <span class="report-kicker">BY DAY</span>
+              <h2 id="daily-report-title"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>일자별 매출</h2>
+              <p>하루하루 쌓인 주문의 기록이에요.</p>
+            </div>
+          </div>
+          <div class="table-scroll" tabindex="0" role="region" aria-label="일자별 매출 표">
+            <table class="report-table">
+              <caption class="sr-only">주문 날짜별 주문 수와 매출</caption>
+              <thead><tr><th scope="col">주문 날짜</th><th scope="col" class="number">주문 수</th><th scope="col" class="number">매출</th></tr></thead>
+              <tbody>
+                {% for row in summary.by_day %}
+                <tr>
+                  <td><span class="report-date">{{ row.order_date }}</span></td>
+                  <td class="number"><span data-money="{{ row.order_count|unlocalize }}">{{ row.order_count }}</span><span class="report-unit">건</span></td>
+                  <td class="number"><strong><span data-money="{{ row.revenue|unlocalize }}">{{ row.revenue }}</span><span class="report-unit">원</span></strong></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="report-empty"><strong>아직 일자별 집계가 없어요.</strong><p>집계가 완료되면 날짜별 매출을 보여드릴게요.</p></td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="surface-footer"><span>주문이 접수된 날짜 기준</span></div>
+        </section>
+
+        <section class="surface report-card" aria-labelledby="visits-report-title">
+          <div class="surface-header">
+            <div>
+              <span class="report-kicker">PAGE VIEWS</span>
+              <h2 id="visits-report-title"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>상품 화면 접속 건수</h2>
+              <p>우리 메뉴를 둘러본 횟수를 모았어요.</p>
+            </div>
+          </div>
+          <div class="table-scroll" tabindex="0" role="region" aria-label="상품 화면 접속 건수 표">
+            <table class="report-table">
+              <caption class="sr-only">조회 날짜별 상품 화면 접속 횟수</caption>
+              <thead><tr><th scope="col">조회 날짜</th><th scope="col" class="number">접속 건수</th></tr></thead>
+              <tbody>
+                {% for row in summary.page_views %}
+                <tr>
+                  <td><span class="report-date">{{ row.visit_date }}</span></td>
+                  <td class="number"><span class="report-visits"><span data-money="{{ row.page_views|unlocalize }}">{{ row.page_views }}</span><span class="report-unit">회</span></span></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="2" class="report-empty"><strong>아직 접속 집계가 없어요.</strong><p>집계가 완료되면 상품 화면의 조회 기록을 보여드릴게요.</p></td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="surface-footer"><span>화면을 조회한 날짜 기준 · 반복 조회 포함</span></div>
+        </section>
+      </div>
+
+      <section class="surface report-card" aria-labelledby="report-title">
+        <div class="surface-header">
+          <div>
+            <span class="report-kicker">ORDER PREVIEW</span>
+            <h2 id="report-title"><svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>주문 미리보기</h2>
+            <p>한 건의 주문에 담긴 메뉴와 금액</p>
+          </div>
+          <span class="snapshot-tag">최대 10건</span>
+        </div>
+        <span class="table-hint">표를 옆으로 밀면 모든 항목을 볼 수 있어요.</span>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="집계된 주문 미리보기 표">
+          <table class="report-table report-preview-table">
+            <caption class="sr-only">집계 결과의 주문 미리보기</caption>
+            <thead><tr><th scope="col">주문번호</th><th scope="col">메뉴 ID</th><th scope="col" class="number">수량</th><th scope="col" class="number">주문 금액</th></tr></thead>
+            <tbody>
+              {% for row in summary.preview %}
+              <tr>
+                <td><span class="order-id">#{{ row.order_id|stringformat:"04d" }}</span></td>
+                <td><span class="menu-name">메뉴 {{ row.product_id }}</span></td>
+                <td class="number"><span data-money="{{ row.quantity|unlocalize }}">{{ row.quantity }}</span><span class="report-unit">개</span></td>
+                <td class="number"><strong><span data-money="{{ row.amount|unlocalize }}">{{ row.amount }}</span><span class="report-unit">원</span></strong></td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" class="report-empty"><strong>아직 집계된 주문이 없어요.</strong><p>첫 집계가 완료되면 주문 기록을 보여드릴게요.</p></td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="surface-footer"><span>{{ summary.preview|length }}건 표시 · 전체 <span data-money="{{ summary.order_count|unlocalize }}">{{ summary.order_count }}</span>건</span><span>주문번호 오름차순</span></div>
+      </section>
+    </div>
+
+    <aside class="report-note" aria-labelledby="report-note-title">
+      <span class="eyebrow">FROM CUP TO RECORD</span>
+      <h2 id="report-note-title">한 잔의 여유가<br>하루의 기록으로.</h2>
       <svg class="art" aria-hidden="true"><use href="#art-coffee"/></svg>
       <p>새로 접수된 주문은 주문 내역에서 바로 확인할 수 있어요. 리포트에는 다음 집계가 완료된 뒤 반영됩니다.</p>
-      <a href="{% url 'shop:orders' %}" class="button secondary" style="margin-top:20px">주문 내역 보기<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      <a href="{% url 'shop:orders' %}" class="button secondary">주문 내역 보기<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
     </aside>
   </div>
 {% endblock %}
+
 {% block scripts %}
-<script>document.getElementById('refresh-report').addEventListener('click',()=>window.location.reload());</script>
+<script>
+  document.getElementById('refresh-report').addEventListener('click', () => window.location.reload());
+</script>
 {% endblock %}
