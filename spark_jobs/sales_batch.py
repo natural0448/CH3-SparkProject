@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from pathlib import Path
+from time import perf_counter
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, LongType
@@ -55,6 +56,14 @@ preview = [
     .limit(10)
     .collect()
 ]
+
+# started = perf_counter()
+# measured_orders = (
+#     spark.read.schema(order_schema).option("header", True)
+#     .csv((data_dir / "raw" / "orders.csv").as_uri())
+#     .withColumn("amount", F.col("quantity") * F.col("unit_price"))
+# )
+
 summary = {
     "generated_at": datetime.now(ZoneInfo("Asia/Seoul")).isoformat(),
     "order_count": orders.count(),
@@ -97,14 +106,12 @@ by_product2 = orders.groupBy("product_id").agg(
 by_product2.explain()
 by_product2.orderBy("product_id").show()
 
-
-
-totals = {}
-for product_id, amount in rows:
-    old_count, old_revenue = totals.get(product_id, (0, 0))
-    totals[product_id] = (old_count + 1, old_revenue + amount)
-
-print(totals)
+# measured_summary = measured_orders.groupBy("product_id").agg(
+#     F.sum("amount").alias("revenue"),
+# )
+# result = measured_summary.collect()
+# print("읽기·집계·결과 수신 초:", perf_counter() - started)
+# print(result)
 
 # 커넥션 끊기
 spark.stop()
