@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}매장 리포트 | SLOW CUP{% endblock %}
+{% block content %}
+  <div class="page-heading"><div><span class="eyebrow">A LOOK AT OUR CAFE</span><h1>우리 카페의 주문 기록.</h1><p>마지막 집계 시점의 주문을 한눈에 살펴보세요.</p></div><button type="button" class="button secondary" id="refresh-report"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>리포트 새로고침</button></div>
+  <div class="metric-grid">
+    <section class="metric featured"><div class="metric-label">집계된 전체 주문<svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg></div><p class="metric-value"><span data-money="{{ summary.order_count }}">{{ summary.order_count }}</span><small>건</small></p><p class="metric-caption">마지막 집계에 포함된 주문 수</p></section>
+    <section class="metric"><div class="metric-label">주문 미리보기<svg class="icon" aria-hidden="true"><use href="#i-cup"/></svg></div><p class="metric-value">{{ summary.preview|length }}<small>건</small></p><p class="metric-caption">주문번호 순으로 최대 10건</p></section>
+    <section class="metric"><div class="metric-label">마지막 집계 시각<svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></div><p class="metric-value" style="font-size:17px;line-height:1.8;letter-spacing:-.4px;overflow-wrap:anywhere"><span data-timestamp="{{ summary.generated_at }}">{{ summary.generated_at }}</span></p><p class="metric-caption">한국 시간 기준</p></section>
+  </div>
+  <div class="dashboard-layout">
+    <section class="surface" aria-labelledby="report-title">
+      <div class="surface-header"><div><h2 id="report-title">주문 미리보기</h2><p>한 건의 주문에 담긴 메뉴와 금액</p></div><span class="snapshot-tag"><span class="small-dot"></span>집계 결과</span></div>
+      <div class="table-scroll"><table><caption class="sr-only">집계 결과의 주문 미리보기</caption><thead><tr><th scope="col">주문번호</th><th scope="col">메뉴 ID</th><th scope="col">수량</th><th scope="col">주문 금액</th></tr></thead><tbody>
+        {% for row in summary.preview %}
+        <tr><td><span class="order-id">#{{ row.order_id|stringformat:"04d" }}</span></td><td><span class="menu-name">메뉴 {{ row.product_id }}</span></td><td class="mono">{{ row.quantity }}개</td><td><strong class="mono"><span data-money="{{ row.amount }}">{{ row.amount }}</span>원</strong></td></tr>
+        {% endfor %}
+      </tbody></table></div>
+      {% if not summary.preview %}<div class="empty-state"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg><h3>아직 집계된 주문이 없어요</h3><p>첫 집계가 완료되면 주문 기록을 보여드릴게요.</p></div>{% endif %}
+      <div class="surface-footer"><span>{{ summary.preview|length }}건 표시 · 전체 {{ summary.order_count }}건</span><span>주문번호 오름차순</span></div>
+    </section>
+    <aside class="insight-note">
+      <span class="eyebrow" style="color:#69815c">FROM CUP TO RECORD</span>
+      <h2>한 잔의 여유가<br>하루의 기록으로.</h2>
+      <svg class="art" aria-hidden="true"><use href="#art-coffee"/></svg>
+      <p>새로 접수된 주문은 주문 내역에서 바로 확인할 수 있어요. 리포트에는 다음 집계가 완료된 뒤 반영됩니다.</p>
+      <a href="{% url 'shop:orders' %}" class="button secondary" style="margin-top:20px">주문 내역 보기<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </aside>
+  </div>
+{% endblock %}
+{% block scripts %}
+<script>document.getElementById('refresh-report').addEventListener('click',()=>window.location.reload());</script>
+{% endblock %}

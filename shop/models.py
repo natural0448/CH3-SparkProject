@@ -1,0 +1,25 @@
+from django.db import models
+
+# Create your models here.
+
+class Product(models.Model):
+    id = models.CharField(max_length=20, primary_key=True)
+    name = models.CharField(max_length=100)
+    category = models.CharField(max_length=50)
+    unit_price = models.PositiveIntegerField()
+
+    def __str__(self):
+        return self.name
+
+
+class Order(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    quantity = models.PositiveIntegerField()
+    unit_price = models.PositiveIntegerField()
+    ordered_at = models.DateTimeField()
+
+    # getter => 가공된 자표나, 죄회하는 값이 잘못되지 않도록 도와주는 매서드
+    @property
+    def amount(self):
+        # quantity * unit_price를 리턴해, 해당 주문의 값을 리턴
+        return self.quantity * self.unit_price

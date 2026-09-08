@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}주문 내역 | SLOW CUP{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <div><span class="eyebrow">THE ORDER BOOK</span><h1>한 잔씩 쌓이는 기록.</h1><p>접수된 주문과 그 순간의 메뉴, 수량, 금액을 확인하세요.</p></div>
+    <a class="button" href="{% url 'shop:products' %}"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>새 주문하기</a>
+  </div>
+  {% if received_order %}
+  <section class="success-banner" role="status">
+    <span class="success-icon"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>
+    <div><h2>주문 #{{ received_order.id|stringformat:"04d" }} 접수 내역</h2><p>{{ received_order.product.name }} {{ received_order.quantity }}개 · <span data-money="{{ received_order.amount }}">{{ received_order.amount }}</span>원 — 주문을 확인해 주세요.</p></div>
+  </section>
+  {% endif %}
+  <div class="metric-grid" aria-label="최근 주문 요약">
+    <section class="metric featured"><div class="metric-label">최근 접수된 주문<svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg></div><p class="metric-value">{{ orders|length }}<small>건</small></p><p class="metric-caption">가장 최근 주문 최대 50건</p></section>
+    <section class="metric"><div class="metric-label">주문 수량<svg class="icon" aria-hidden="true"><use href="#i-bag"/></svg></div><p class="metric-value"><span data-money="{{ order_quantity_total }}">{{ order_quantity_total }}</span><small>개</small></p><p class="metric-caption">최근 {{ orders|length }}건의 메뉴 수량 합계</p></section>
+    <section class="metric"><div class="metric-label">주문 금액<svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg></div><p class="metric-value"><span data-money="{{ order_amount_total }}">{{ order_amount_total }}</span><small>원</small></p><p class="metric-caption">주문 당시 단가로 계산한 금액</p></section>
+  </div>
+
+  <section class="surface" aria-labelledby="orders-title">
+    <div class="surface-header"><div><h2 id="orders-title">주문 접수 내역</h2><p>새로운 주문부터 차례대로 보여드려요.</p></div>
+      <label class="search-box"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><span class="sr-only">주문 내역 검색</span><input type="search" id="order-search" placeholder="주문번호 또는 메뉴 검색" autocomplete="off"></label>
+    </div>
+    <p class="table-hint">표를 좌우로 밀면 금액과 주문 확인서를 볼 수 있어요.</p>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="주문 내역 표">
+      <table>
+        <caption class="sr-only">최근 주문 최대 50건의 메뉴, 수량, 금액과 접수 시각</caption>
+        <thead><tr><th scope="col">주문번호</th><th scope="col">메뉴</th><th scope="col">수량</th><th scope="col">주문 금액</th><th scope="col">접수 일시</th><th scope="col">주문 확인서</th></tr></thead>
+        <tbody id="order-table-body">
+          {% for order in orders %}
+          <tr data-order-id="{{ order.id }}" data-order-number="{{ order.id|stringformat:'04d' }}" data-product-name="{{ order.product.name }}" data-quantity="{{ order.quantity }}" data-unit-price="{{ order.unit_price }}" data-amount="{{ order.amount }}" data-ordered-at="{{ order.ordered_at|date:'Y.m.d H:i:s' }}">
+            <td><span class="order-id">#{{ order.id|stringformat:"04d" }}</span><span class="table-sub">주문 접수</span></td>
+            <td><div class="order-menu"><span class="mini-menu-icon {% if order.product.category == '식품' %}bakery{% endif %}"><svg class="icon" aria-hidden="true"><use href="{% if order.product.category == '식품' %}#i-bread{% else %}#i-cup{% endif %}"/></svg></span><div><span class="menu-name">{{ order.product.name }}</span><span class="table-sub">{{ order.product.category }} · 단가 <span data-money="{{ order.unit_price }}">{{ order.unit_price }}</span>원</span></div></div></td>
+            <td class="mono">{{ order.quantity }}개</td>
+            <td><strong class="mono"><span data-money="{{ order.amount }}">{{ order.amount }}</span>원</strong></td>
+            <td>{{ order.ordered_at|date:"Y.m.d" }}<span class="table-sub">{{ order.ordered_at|date:"H:i:s" }}</span></td>
+            <td><button type="button" class="text-button receipt-open" aria-label="주문 {{ order.id }} 확인서 보기"><svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>보기</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div id="order-empty" class="empty-state" {% if orders %}hidden{% endif %}><svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg><h3>{% if orders %}검색 결과가 없어요{% else %}첫 번째 주문을 기다리고 있어요{% endif %}</h3><p>{% if orders %}주문번호나 메뉴 이름을 다시 확인해 주세요.{% else %}마음에 드는 메뉴를 골라 주문해 보세요.{% endif %}</p><a href="{% url 'shop:products' %}" class="button secondary">메뉴 보러 가기</a></div>
+    <div class="surface-footer"><span id="order-result-count" aria-live="polite">{{ orders|length }}건의 주문</span><span>최근 50건 기준 · 금액은 주문 당시 단가 기준</span></div>
+  </section>
+
+  <dialog class="receipt-dialog" id="order-receipt" aria-labelledby="receipt-title">
+    <div class="receipt-top"><button class="close-dialog" type="button" data-close-dialog aria-label="주문 확인서 닫기"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <div class="receipt">
+      <div class="receipt-brand"><span class="brand-mark"><svg class="icon" aria-hidden="true"><use href="#i-cup"/></svg></span><strong>SLOW CUP.</strong><p>ORDER RECEIPT · 주문 확인서</p></div>
+      <div class="receipt-id"><h2 id="receipt-title"></h2><p id="receipt-time"></p></div>
+      <div class="receipt-lines"><div class="spread"><span class="muted">메뉴</span><strong id="receipt-menu"></strong></div><div class="spread"><span class="muted">주문 단가</span><span id="receipt-price"></span></div><div class="spread"><span class="muted">수량</span><span id="receipt-quantity"></span></div></div>
+      <div class="receipt-amount spread"><span>총 주문 금액</span><strong id="receipt-total"></strong></div>
+      <p class="receipt-thanks">Thank you for your little pause.</p><p class="small muted" style="text-align:center;font-size:10px">접수된 주문의 확인 내역입니다.</p>
+    </div>
+    <div class="dialog-actions"><button class="button secondary" type="button" data-close-dialog>닫기</button><button class="button" type="button" id="print-receipt"><svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>확인서 인쇄</button></div>
+  </dialog>
+{% endblock %}
+{% block scripts %}
+<script>
+(() => {
+  const rows=Array.from(document.querySelectorAll('#order-table-body tr[data-order-id]'));
+  const search=document.getElementById('order-search');
+  const empty=document.getElementById('order-empty');
+  const dialog=document.getElementById('order-receipt');
+  const money=new Intl.NumberFormat('ko-KR');
+  search.addEventListener('input',()=>{
+    const term=search.value.trim().toLocaleLowerCase('ko-KR').replace(/^#/,'');
+    let count=0;
+    rows.forEach(row=>{
+      const matches=(row.dataset.orderNumber+' '+row.dataset.orderId+' '+row.dataset.productName).toLocaleLowerCase('ko-KR').includes(term);
+      row.hidden=!matches;if(matches)count++;
+    });
+    empty.hidden=count>0;
+    document.getElementById('order-result-count').textContent=count+'건의 주문';
+  });
+  document.querySelectorAll('.receipt-open').forEach(button=>button.addEventListener('click',()=>{
+    const data=button.closest('tr').dataset;
+    document.getElementById('receipt-title').textContent='주문 #'+data.orderNumber;
+    document.getElementById('receipt-time').textContent=data.orderedAt;
+    document.getElementById('receipt-menu').textContent=data.productName;
+    document.getElementById('receipt-price').textContent=money.format(Number(data.unitPrice))+'원';
+    document.getElementById('receipt-quantity').textContent=data.quantity+'개';
+    document.getElementById('receipt-total').textContent=money.format(Number(data.amount))+'원';
+    dialog.showModal();
+  }));
+  document.getElementById('print-receipt').addEventListener('click',()=>{document.body.classList.add('printing-receipt');window.print();});
+  window.addEventListener('afterprint',()=>document.body.classList.remove('printing-receipt'));
+  dialog.addEventListener('close',()=>document.body.classList.remove('printing-receipt'));
+})();
+</script>
+{% endblock %}
