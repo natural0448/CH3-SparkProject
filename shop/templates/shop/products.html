@@ -6,7 +6,7 @@
     <div>
       <span class="eyebrow">A SMALL MOMENT, JUST FOR YOU</span>
       <h1 id="menu-title">오늘의 여유를<br>주문해 보세요.</h1>
-      <p>좋아하는 커피 한 잔, 그리고 곁들이는 빵.<br>당신의 작은 쉼을 준비할게요.</p>
+      <p>좋아하는 음료 한 잔, 그리고 곁들이는 디저트.<br>당신의 작은 쉼을 준비할게요.</p>
     </div>
     <div class="hero-art" aria-hidden="true">
       <span class="hero-seal">TAKE A SIP<br>TAKE IT SLOW</span>
@@ -26,15 +26,15 @@
       <div class="menu-grid" id="menu-grid">
         {% for product in products %}
         <article class="menu-card" data-product-id="{{ product.id }}" data-category="{{ product.category }}">
-          <div class="menu-art {% if product.category == '식품' %}bakery{% endif %}">
-            <span class="menu-label">{% if product.category == '음료' %}COFFEE MOMENT{% elif product.category == '식품' %}A LITTLE BITE{% else %}SLOW CUP MENU{% endif %}</span>
+          <div class="menu-art {% if '주스' in product.name or '쥬스' in product.name %}juice{% elif '케이크' in product.name or '케익' in product.name %}cake{% elif product.category == '식품' %}bakery{% endif %}">
+            <span class="menu-label">{% if '주스' in product.name or '쥬스' in product.name %}A FRESH SIP{% elif '케이크' in product.name or '케익' in product.name %}A SWEET SLICE{% elif product.category == '음료' %}COFFEE MOMENT{% elif product.category == '식품' %}A LITTLE BITE{% else %}SLOW CUP MENU{% endif %}</span>
             <span class="selection-mark" aria-hidden="true"><svg class="icon"><use href="#i-check"/></svg></span>
-            <svg role="img" aria-label="{{ product.name }} 일러스트"><use href="{% if product.category == '식품' %}#art-bread{% else %}#art-coffee{% endif %}"/></svg>
+            <svg role="img" aria-label="{{ product.name }} 일러스트"><use href="{% if '주스' in product.name or '쥬스' in product.name %}#art-juice{% elif '케이크' in product.name or '케익' in product.name %}#art-cake{% elif product.category == '식품' %}#art-bread{% else %}#art-coffee{% endif %}"/></svg>
           </div>
           <div class="menu-body">
             <span class="eyebrow" style="font-size:8px;letter-spacing:1px">{{ product.category }} · 메뉴 {{ product.id }}</span>
             <h3>{{ product.name }}</h3>
-            <p class="menu-description">{% if product.category == '음료' %}잠깐의 쉼과 함께하는 한 잔.{% elif product.category == '식품' %}커피 곁에 두고 싶은 작은 행복.{% else %}오늘의 순간에 더하는 즐거움.{% endif %}</p>
+            <p class="menu-description">{% if '주스' in product.name or '쥬스' in product.name %}상큼하게 채우는 한 잔의 여유.{% elif '케이크' in product.name or '케익' in product.name %}기분 좋은 달콤함을 한 조각.{% elif product.category == '음료' %}잠깐의 쉼과 함께하는 한 잔.{% elif product.category == '식품' %}커피 곁에 두고 싶은 작은 행복.{% else %}오늘의 순간에 더하는 즐거움.{% endif %}</p>
             <div class="menu-bottom">
               <span class="price"><span data-money="{{ product.unit_price|unlocalize }}">{{ product.unit_price }}</span><small>원</small></span>
               <button class="select-menu" type="button" data-select-product="{{ product.id }}" aria-label="{{ product.name }} ({{ product.id }}) 선택" aria-pressed="false"><span>선택하기</span><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></button>
