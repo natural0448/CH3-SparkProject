@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-08T18:00:56+09:00",
+  "generated_at": "2026-09-09T16:50:22.138967+09:00",
   "order_count": 17,
   "preview": [
     {
@@ -68,6 +68,7 @@
       "product_id": "A",
       "name": "커피",
       "category": "음료",
+      "product_name": "커피",
       "order_count": 9,
       "revenue": 3100,
       "sold_quantity": 31,
@@ -77,6 +78,7 @@
       "product_id": "B",
       "name": "빵",
       "category": "식품",
+      "product_name": "빵",
       "order_count": 8,
       "revenue": 2900,
       "sold_quantity": 29,
@@ -86,6 +88,7 @@
       "product_id": "C",
       "name": "주스",
       "category": "음료",
+      "product_name": "주스",
       "order_count": 0,
       "revenue": 0,
       "sold_quantity": 0,
@@ -95,6 +98,7 @@
       "product_id": "D",
       "name": "조각케이크",
       "category": "식품",
+      "product_name": "조각케이크",
       "order_count": 0,
       "revenue": 0,
       "sold_quantity": 0,
@@ -120,8 +124,23 @@
     },
     {
       "visit_date": "2026-09-08",
-      "page_views": 36
+      "page_views": 37
+    },
+    {
+      "visit_date": "2026-09-09",
+      "page_views": 3
     }
   ],
-  "by_category": []
+  "by_category": [
+    {
+      "category": "식품",
+      "order_count": 8,
+      "revenue": 2900
+    },
+    {
+      "category": "음료",
+      "order_count": 9,
+      "revenue": 3100
+    }
+  ]
 }
