@@ -27,6 +27,13 @@
   .report-product .mini-menu-icon .icon{width:17px;height:17px}
   .report-product-name{font-weight:650}
   .report-products-table,.report-preview-table{min-width:460px}
+  .report-category-table{min-width:280px}
+  .report-hourly-table{min-width:540px}
+  .report-hour-label{font-size:12px;font-weight:650;font-variant-numeric:tabular-nums;color:var(--ink)}
+  .report-share{display:grid;justify-items:end;gap:7px;min-width:100px}
+  .report-share-value{font-weight:700;color:var(--ink)}
+  .report-share-track{display:block;width:100px;height:5px;border-radius:99px;background:var(--sage);overflow:hidden}
+  .report-share-fill{display:block;height:100%;max-width:100%;border-radius:inherit;background:#728565}
   .report-split .report-table{min-width:290px}
   .report-split .report-table th,.report-split .report-table td{padding-left:18px;padding-right:18px}
   .report-split .report-table td{height:61px}
@@ -73,6 +80,8 @@
     .nav-link .icon{width:15px;height:15px}
     .report-split .report-table{min-width:260px}
     .report-split .report-table th,.report-split .report-table td{padding-left:12px;padding-right:12px}
+    .report-category-table{min-width:260px}
+    .report-category-table th,.report-category-table td{padding-left:12px;padding-right:12px}
     .report-note{display:block}
     .report-note .art{display:none}
   }
@@ -131,7 +140,7 @@
             <tbody>
               {% for row in summary.by_product %}
               <tr>
-                <td><div class="report-product"><span class="mini-menu-icon {% if row.category == '식품' %}bakery{% endif %}"><svg class="icon" aria-hidden="true"><use href="#i-bag"/></svg></span><div><span class="report-product-name">{{ row.name|default:row.product_id }}</span><span class="table-sub">상품 {{ row.product_id }}{% if row.category %} · {{ row.category }}{% endif %}</span></div></div></td>
+                <td><div class="report-product"><span class="mini-menu-icon {% if row.category == '식품' %}bakery{% endif %}"><svg class="icon" aria-hidden="true"><use href="#i-bag"/></svg></span><div><span class="report-product-name">{% firstof row.product_name row.name row.product_id %}</span><span class="table-sub">상품 {{ row.product_id }}{% if row.category %} · {{ row.category }}{% endif %}</span></div></div></td>
                 <td class="number"><span data-money="{{ row.order_count|unlocalize }}">{{ row.order_count }}</span><span class="report-unit">건</span></td>
                 <td class="number"><strong><span data-money="{{ row.revenue|unlocalize }}">{{ row.revenue }}</span><span class="report-unit">원</span></strong></td>
                 <td class="number">{% if row.order_count %}<span data-money="{{ row.average_order_amount|floatformat:'2u' }}">{{ row.average_order_amount|floatformat:2 }}</span><span class="report-unit">원</span>{% else %}<span class="muted" aria-label="아직 주문이 없어 평균을 계산할 수 없습니다">—</span>{% endif %}</td>
@@ -143,6 +152,73 @@
           </table>
         </div>
         <div class="surface-footer"><span>평균 주문 금액 = 매출 ÷ 주문 횟수 · 소수점 둘째 자리까지 표시</span><span>주문이 없는 메뉴의 평균은 —로 표시</span></div>
+      </section>
+
+      <section class="surface report-card" aria-labelledby="category-report-title">
+        <div class="surface-header">
+          <div>
+            <span class="report-kicker">BY CATEGORY</span>
+            <h2 id="category-report-title"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>분류별 매출</h2>
+            <p>메뉴 분류별로 모인 주문과 매출이에요.</p>
+          </div>
+          <span class="snapshot-tag"><span class="small-dot"></span>{{ summary.by_category|length }}개 분류</span>
+        </div>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="분류별 매출 표">
+          <table class="report-table report-category-table">
+            <caption class="sr-only">상품 분류별 주문 횟수와 매출</caption>
+            <thead><tr><th scope="col">메뉴 분류</th><th scope="col" class="number">주문 횟수</th><th scope="col" class="number">매출</th></tr></thead>
+            <tbody>
+              {% for row in summary.by_category %}
+              <tr>
+                <td><div class="report-product"><span class="mini-menu-icon {% if row.category == '식품' %}bakery{% endif %}"><svg class="icon" aria-hidden="true"><use href="{% if row.category == '음료' %}#i-cup{% elif row.category == '식품' %}#i-bread{% else %}#i-bag{% endif %}"/></svg></span><span class="report-product-name">{{ row.category|default:'미분류' }}</span></div></td>
+                <td class="number"><span data-money="{{ row.order_count|unlocalize }}">{{ row.order_count }}</span><span class="report-unit">건</span></td>
+                <td class="number"><strong><span data-money="{{ row.revenue|unlocalize }}">{{ row.revenue }}</span><span class="report-unit">원</span></strong></td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="3" class="report-empty"><strong>아직 분류별 집계가 없어요.</strong><p>집계가 완료되면 메뉴 분류별 주문과 매출을 보여드릴게요.</p></td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="surface-footer"><span>주문에 연결된 상품 분류 기준</span><span>같은 분류의 메뉴를 함께 집계</span></div>
+      </section>
+
+      <section class="surface report-card" aria-labelledby="hourly-report-title">
+        <div class="surface-header">
+          <div>
+            <span class="report-kicker">BY HOUR</span>
+            <h2 id="hourly-report-title"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>시간대별 매출</h2>
+            <p>어느 시간에 주문이 모였는지, 매출 비중과 함께 살펴보세요.</p>
+          </div>
+          <span class="snapshot-tag"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>한국 시간 기준</span>
+        </div>
+        <span class="table-hint">표를 옆으로 밀면 모든 항목을 볼 수 있어요.</span>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="시간대별 매출과 매출 비중 표">
+          <table class="report-table report-hourly-table">
+            <caption class="sr-only">시간대별 주문 횟수, 매출과 전체 매출에서 차지하는 비중</caption>
+            <thead><tr><th scope="col">주문 시간대</th><th scope="col" class="number">주문 횟수</th><th scope="col" class="number">매출</th><th scope="col" class="number">매출 비중</th></tr></thead>
+            <tbody>
+              {% for row in summary.by_hour %}
+              <tr>
+                <td><span class="report-hour-label">{% if row.order_hour != None %}{{ row.order_hour|stringformat:'02d' }}:00–{{ row.order_hour|stringformat:'02d' }}:59{% else %}시간 정보 없음{% endif %}</span></td>
+                <td class="number"><span data-money="{{ row.order_count|unlocalize }}">{{ row.order_count }}</span><span class="report-unit">건</span></td>
+                <td class="number"><strong><span data-money="{{ row.revenue|unlocalize }}">{{ row.revenue }}</span><span class="report-unit">원</span></strong></td>
+                <td class="number">
+                  {% if row.revenue_share_pct != None %}
+                  <div class="report-share">
+                    <span class="report-share-value">{{ row.revenue_share_pct|floatformat:'2u' }}<span class="report-unit">%</span></span>
+                    <span class="report-share-track" aria-hidden="true"><span class="report-share-fill" style="width: {{ row.revenue_share_pct|floatformat:'2u' }}%;"></span></span>
+                  </div>
+                  {% else %}<span class="muted" aria-label="매출 비중 정보 없음">—</span>{% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" class="report-empty"><strong>아직 시간대별 집계가 없어요.</strong><p>집계가 완료되면 시간대별 매출과 비중을 보여드릴게요.</p></td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="surface-footer"><span>여러 날짜의 같은 시간대를 합산 · 주문이 있는 시간대만 표시</span><span>매출 비중 = 시간대 매출 ÷ 전체 매출 × 100</span></div>
       </section>
 
       <div class="report-split">

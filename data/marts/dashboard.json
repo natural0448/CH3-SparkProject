@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-09T16:50:22.138967+09:00",
+  "generated_at": "2026-09-09T17:24:09.480632+09:00",
   "order_count": 17,
   "preview": [
     {
@@ -128,7 +128,7 @@
     },
     {
       "visit_date": "2026-09-09",
-      "page_views": 3
+      "page_views": 4
     }
   ],
   "by_category": [
@@ -141,6 +141,20 @@
       "category": "음료",
       "order_count": 9,
       "revenue": 3100
+    }
+  ],
+  "by_hour": [
+    {
+      "order_hour": 10,
+      "order_count": 12,
+      "revenue": 4300,
+      "revenue_share_pct": 71.67
+    },
+    {
+      "order_hour": 17,
+      "order_count": 5,
+      "revenue": 1700,
+      "revenue_share_pct": 28.33
     }
   ]
 }
