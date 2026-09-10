@@ -8,6 +8,14 @@
   .report-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
   .report-refresh-note{font-size:10px!important;word-break:keep-all}
   .report-time{font-size:17px;line-height:1.8;letter-spacing:-.4px;overflow-wrap:anywhere}
+  .report-pipeline{display:flex;align-items:center;gap:26px;padding:18px 24px;margin-bottom:26px}
+  .report-pipeline-metric{display:flex;align-items:center;gap:14px;flex-shrink:0}
+  .report-pipeline-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:var(--sage);color:#62765c}
+  .report-pipeline h2{font-size:11px;font-weight:500;color:var(--muted);margin:0 0 4px}
+  .report-pipeline-value{font-size:23px;font-weight:700;line-height:1.4;color:var(--ink);font-variant-numeric:tabular-nums}
+  .report-pipeline-value small{font-size:11px;font-weight:400;margin-left:5px}
+  .report-pipeline-pending{font-size:13px;font-weight:500}
+  .report-pipeline-scope{font-size:11px;color:var(--muted);line-height:1.9;word-break:keep-all}
   .report-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:24px;align-items:start}
   .report-sections{display:grid;gap:22px;min-width:0}
   .report-split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;align-items:stretch}
@@ -64,6 +72,7 @@
   }
   @media(max-width:620px){
     .report-actions{align-items:flex-start}
+    .report-pipeline{flex-direction:column;align-items:flex-start;gap:12px;padding:18px;margin-bottom:22px}
     .report-split{grid-template-columns:1fr}
     .report-sections,.report-split{gap:18px}
     .report-card .surface-header{padding:20px 18px 18px}
@@ -112,7 +121,7 @@
     <section class="metric">
       <div class="metric-label">주문 미리보기<svg class="icon" aria-hidden="true"><use href="#i-cup"/></svg></div>
       <p class="metric-value">{{ summary.preview|length }}<small>건</small></p>
-      <p class="metric-caption">주문번호 순으로 최대 10건</p>
+      <p class="metric-caption">주문번호 최신순으로 최대 10건</p>
     </section>
     <section class="metric">
       <div class="metric-label">마지막 집계 시각<svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></div>
@@ -120,6 +129,17 @@
       <p class="metric-caption">한국 시간 기준</p>
     </section>
   </div>
+
+  <section class="surface report-pipeline" aria-labelledby="pipeline-title" aria-describedby="pipeline-scope">
+    <div class="report-pipeline-metric">
+      <span class="report-pipeline-icon"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></span>
+      <div>
+        <h2 id="pipeline-title">저장·집계 처리 시간</h2>
+        <p class="report-pipeline-value">{% if summary.pipeline_seconds != None %}{{ summary.pipeline_seconds|floatformat:3 }}<small>초</small>{% else %}<span class="report-pipeline-pending">다음 집계 후 표시</span>{% endif %}</p>
+      </div>
+    </div>
+    <p class="report-pipeline-scope" id="pipeline-scope">측정 범위: Spark 세션 준비 뒤부터 입력 읽기·Parquet/Delta 저장·집계 결과 수신까지.<br>JSON 파일 쓰기는 제외한 시간입니다.</p>
+  </section>
 
   <div class="report-layout">
     <div class="report-sections">

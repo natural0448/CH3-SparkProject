@@ -1,66 +1,66 @@
 {
-  "generated_at": "2026-09-09T17:24:09.480632+09:00",
-  "order_count": 17,
+  "generated_at": "2026-09-10T17:27:06+09:00",
+  "order_count": 20,
   "preview": [
     {
-      "order_id": 1,
-      "product_id": "A",
-      "quantity": 1,
-      "amount": 100
-    },
-    {
-      "order_id": 2,
-      "product_id": "A",
-      "quantity": 2,
-      "amount": 200
-    },
-    {
-      "order_id": 3,
-      "product_id": "A",
-      "quantity": 3,
-      "amount": 300
-    },
-    {
-      "order_id": 4,
+      "order_id": 20,
       "product_id": "B",
-      "quantity": 1,
-      "amount": 100
+      "quantity": 9,
+      "amount": 900
     },
     {
-      "order_id": 5,
-      "product_id": "B",
-      "quantity": 2,
-      "amount": 200
+      "order_id": 19,
+      "product_id": "C",
+      "quantity": 6,
+      "amount": 600
     },
     {
-      "order_id": 6,
-      "product_id": "B",
-      "quantity": 3,
-      "amount": 300
+      "order_id": 18,
+      "product_id": "D",
+      "quantity": 4,
+      "amount": 400
     },
     {
-      "order_id": 7,
+      "order_id": 17,
+      "product_id": "A",
+      "quantity": 6,
+      "amount": 600
+    },
+    {
+      "order_id": 16,
       "product_id": "A",
       "quantity": 4,
       "amount": 400
     },
     {
-      "order_id": 8,
+      "order_id": 15,
       "product_id": "A",
       "quantity": 5,
       "amount": 500
     },
     {
-      "order_id": 9,
+      "order_id": 14,
       "product_id": "B",
-      "quantity": 4,
-      "amount": 400
+      "quantity": 1,
+      "amount": 100
     },
     {
-      "order_id": 10,
+      "order_id": 13,
+      "product_id": "A",
+      "quantity": 1,
+      "amount": 100
+    },
+    {
+      "order_id": 12,
       "product_id": "B",
-      "quantity": 5,
-      "amount": 500
+      "quantity": 7,
+      "amount": 700
+    },
+    {
+      "order_id": 11,
+      "product_id": "B",
+      "quantity": 6,
+      "amount": 600
     }
   ],
   "by_product": [
@@ -79,30 +79,30 @@
       "name": "빵",
       "category": "식품",
       "product_name": "빵",
-      "order_count": 8,
-      "revenue": 2900,
-      "sold_quantity": 29,
-      "average_order_amount": 362.5
+      "order_count": 9,
+      "revenue": 3800,
+      "sold_quantity": 38,
+      "average_order_amount": 422.22222222222223
     },
     {
       "product_id": "C",
       "name": "주스",
       "category": "음료",
       "product_name": "주스",
-      "order_count": 0,
-      "revenue": 0,
-      "sold_quantity": 0,
-      "average_order_amount": null
+      "order_count": 1,
+      "revenue": 600,
+      "sold_quantity": 6,
+      "average_order_amount": 600.0
     },
     {
       "product_id": "D",
       "name": "조각케이크",
       "category": "식품",
       "product_name": "조각케이크",
-      "order_count": 0,
-      "revenue": 0,
-      "sold_quantity": 0,
-      "average_order_amount": null
+      "order_count": 1,
+      "revenue": 400,
+      "sold_quantity": 4,
+      "average_order_amount": 400.0
     }
   ],
   "by_day": [
@@ -115,6 +115,11 @@
       "order_date": "2026-09-08",
       "order_count": 8,
       "revenue": 4100
+    },
+    {
+      "order_date": "2026-09-10",
+      "order_count": 3,
+      "revenue": 1900
     }
   ],
   "page_views": [
@@ -128,19 +133,23 @@
     },
     {
       "visit_date": "2026-09-09",
-      "page_views": 4
+      "page_views": 8
+    },
+    {
+      "visit_date": "2026-09-10",
+      "page_views": 5
     }
   ],
   "by_category": [
     {
       "category": "식품",
-      "order_count": 8,
-      "revenue": 2900
+      "order_count": 10,
+      "revenue": 4200
     },
     {
       "category": "음료",
-      "order_count": 9,
-      "revenue": 3100
+      "order_count": 10,
+      "revenue": 3700
     }
   ],
   "by_hour": [
@@ -148,13 +157,14 @@
       "order_hour": 10,
       "order_count": 12,
       "revenue": 4300,
-      "revenue_share_pct": 71.67
+      "revenue_share_pct": 54.43
     },
     {
       "order_hour": 17,
-      "order_count": 5,
-      "revenue": 1700,
-      "revenue_share_pct": 28.33
+      "order_count": 8,
+      "revenue": 3600,
+      "revenue_share_pct": 45.57
     }
-  ]
+  ],
+  "pipeline_seconds": 40.557
 }

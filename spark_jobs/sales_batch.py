@@ -3,10 +3,11 @@ import json
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from pathlib import Path
-# from time import perf_counter
+from time import perf_counter
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, LongType
+from pyspark.sql.types import TimestampType, DecimalType
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--data-dir", required=True)
@@ -18,6 +19,9 @@ spark = (
     .config("spark.sql.session.timeZone", "Asia/Seoul")
     .getOrCreate()
 )
+
+# 스파크 연결 후 정제 시작시간
+started = perf_counter()
 
 # INFO 레벨 로그 안 보기
 spark.sparkContext.setLogLevel("WARN")
@@ -37,14 +41,33 @@ product_schema = "product_id string, name string, category string"
 raw_orders = spark.read.schema(order_schema).option("header", True).csv(
     (data_dir / "raw" / "orders.csv").as_uri()
 )
+bronze_path = (data_dir / "lake" / "bronze" / "orders").as_uri()
+raw_orders.write.mode("overwrite").parquet(bronze_path)
+bronze_orders = spark.read.parquet(bronze_path)
 products = spark.read.schema(product_schema).json(
     (data_dir / "raw" / "products.jsonl").as_uri()
 )
 orders = (
-    raw_orders.withColumn("amount", F.col("quantity") * F.col("unit_price"))
+    bronze_orders.withColumn("amount", F.col("quantity") * F.col("unit_price"))
     .withColumn("ordered_at", F.to_timestamp("ordered_at"))
     .withColumn("order_date", F.to_date("ordered_at"))
 )
+
+# [8일차_4교시] Silver에 저장한 뒤 다시 읽은 주문을 아래 모든 집계에 사용합니다.
+silver_path = (data_dir / "lake" / "silver" / "orders").as_uri()
+orders.write.format("delta").mode("overwrite").save(silver_path)
+orders = spark.read.format("delta").load(silver_path)
+
+
+# products는 위에서 한 번 읽었으므로 중복 읽기는 복습용 주석으로 보관합니다.
+# products = spark.read.schema(product_schema).json(
+#     (data_dir / "raw" / "products.jsonl").as_uri()
+# )
+# orders = (
+#     raw_orders.withColumn("amount", F.col("quantity") * F.col("unit_price"))
+#     .withColumn("ordered_at", F.to_timestamp("ordered_at"))
+#     .withColumn("order_date", F.to_date("ordered_at"))
+# )
 
 # 7일차 관찰 시작
 # 전체 orders는 유지하고 최초 12건만 파티션 관찰에 사용합니다.
@@ -320,14 +343,46 @@ by_day = orders.groupBy("order_date").agg(
 # page_views.orderBy("visit_date").show()
 # by_day.orderBy("order_date").show()
 
+# [8일차_2교시] 작업본
+# 관찰을 마친 출력은 복습할 때 필요한 줄만 해제합니다.
+# print("\n[3교시  원천 주문을 컬럼형 파일로 저장하기 테이블 작성]")
+# bronze_orders.printSchema()
+# selected = bronze_orders.select("product_id", "quantity", "unit_price")
+# selected.explain("formatted")
+# orders.filter(F.col("order_id") <= 12).groupBy("product_id").agg(
+#     F.sum("amount").alias("revenue")
+# ).orderBy("product_id").show()
+
+
+# [8일차_3교시] 작업본
+# 저장·재읽기는 위쪽으로 옮겼으므로 이 위치의 이전 실습 코드는 주석으로 보관합니다.
+# print("\n[3교시 Delta 패키지와 첫 테이블 작성]")
+# silver_path = (data_dir / "lake" / "silver" / "orders").as_uri()
+# orders.write.format("delta").mode("overwrite").save(silver_path)
+# saved_orders = spark.read.format("delta").load(silver_path)
+# saved_orders.select("order_id", "quantity", "amount").orderBy("order_id").show()
+
 # # 세 집계를 모두 만든 다음 미리보기와 JSON 저장 데이터를 준비합니다.
+# orders.write.format("delta").mode("overwrite").save(silver_path)
+# saved_orders = spark.read.format("delta").load(silver_path)
+# orders = spark.read.format("delta").load(silver_path)
+
+# [8일차_4교시] 스키마와 최초 12건의 날짜별 매출을 확인한 관찰 코드
+# bronze_orders.printSchema()
+# orders.printSchema()
+# orders.filter(F.col("order_id") <= 12).groupBy("order_date").agg(
+#     F.sum("amount").alias("revenue")
+# ).orderBy("order_date").show()
+
+
 preview = [
     row.asDict()
     for row in orders.select("order_id", "product_id", "quantity", "amount")
-    .orderBy("order_id")
+    .orderBy(F.col("order_id").desc())
     .limit(10)
     .collect()
 ]
+
 
 # measured_summary = measured_orders.groupBy("product_id").agg(
 #     F.sum("amount").alias("revenue"),
@@ -347,7 +402,10 @@ summary = {
     "by_category": [row.asDict() for row in by_category.orderBy("category").collect()],
     "by_hour": [row.asDict() for row in by_hour.orderBy("order_hour").collect()],
 }
-# # summary["generated_at"] = datetime.now(ZoneInfo("Asia/Seoul")).isoformat(timespec="seconds")
+
+summary["generated_at"] = datetime.now(ZoneInfo("Asia/Seoul")).isoformat(timespec="seconds")
+summary["pipeline_seconds"] = round(perf_counter() - started, 3)
+
 
 output_dir = data_dir / "marts"
 output_dir.mkdir(parents=True, exist_ok=True)
@@ -357,6 +415,28 @@ with (output_dir / "dashboard.json").open("w", encoding="utf-8") as stream:
 print("\n[5교시 7단계] 상품명이 포함된 JSON 저장 완료")
 print("all_rows =", summary["order_count"])
 print("dashboard_json =", output_dir / "dashboard.json")
+print("pipeline_seconds =", summary["pipeline_seconds"])
+
+# olist_order_items_schema = StructType([
+#     StructField("order_id", StringType()),
+#     StructField("order_item_id", IntegerType()),
+#     StructField("product_id", StringType()),
+#     StructField("seller_id", StringType()),
+#     StructField("shipping_limit_date", TimestampType()),
+#     StructField("price", DecimalType(10, 2)),
+#     StructField("freight_value", DecimalType(10, 2)),
+# ])
+
+# olist_order_items = spark.read.schema(olist_order_items_schema).option("header", True).csv(
+#     (data_dir / "raw" / "olist_order_items_dataset.csv").as_uri()
+# )
+
+# olist_order_items_bronze_path = (data_dir / "lake" / "bronze" / "olist_order_items").as_uri()
+
+# olist_order_items.orderBy("order_id", "order_item_id").show()
+# olist_order_items.write.mode("overwrite").parquet(olist_order_items_bronze_path)
+
+
 
 # 모든 집계와 JSON 저장을 마친 뒤 마지막에 Spark를 종료합니다.
 spark.stop()

@@ -132,3 +132,4 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DELTA_PACKAGE = "io.delta:delta-spark_4.1_2.13:4.1.0"
