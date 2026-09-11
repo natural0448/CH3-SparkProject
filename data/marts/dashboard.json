@@ -1,7 +1,19 @@
 {
-  "generated_at": "2026-09-10T17:27:06+09:00",
-  "order_count": 20,
+  "generated_at": "2026-09-11T10:44:12+09:00",
+  "order_count": 22,
   "preview": [
+    {
+      "order_id": 22,
+      "product_id": "A",
+      "quantity": 5,
+      "amount": 500
+    },
+    {
+      "order_id": 21,
+      "product_id": "C",
+      "quantity": 3,
+      "amount": 300
+    },
     {
       "order_id": 20,
       "product_id": "B",
@@ -49,18 +61,6 @@
       "product_id": "A",
       "quantity": 1,
       "amount": 100
-    },
-    {
-      "order_id": 12,
-      "product_id": "B",
-      "quantity": 7,
-      "amount": 700
-    },
-    {
-      "order_id": 11,
-      "product_id": "B",
-      "quantity": 6,
-      "amount": 600
     }
   ],
   "by_product": [
@@ -69,10 +69,10 @@
       "name": "커피",
       "category": "음료",
       "product_name": "커피",
-      "order_count": 9,
-      "revenue": 3100,
-      "sold_quantity": 31,
-      "average_order_amount": 344.44444444444446
+      "order_count": 10,
+      "revenue": 3600,
+      "sold_quantity": 36,
+      "average_order_amount": 360.0
     },
     {
       "product_id": "B",
@@ -89,10 +89,10 @@
       "name": "주스",
       "category": "음료",
       "product_name": "주스",
-      "order_count": 1,
-      "revenue": 600,
-      "sold_quantity": 6,
-      "average_order_amount": 600.0
+      "order_count": 2,
+      "revenue": 900,
+      "sold_quantity": 9,
+      "average_order_amount": 450.0
     },
     {
       "product_id": "D",
@@ -120,6 +120,11 @@
       "order_date": "2026-09-10",
       "order_count": 3,
       "revenue": 1900
+    },
+    {
+      "order_date": "2026-09-11",
+      "order_count": 2,
+      "revenue": 800
     }
   ],
   "page_views": [
@@ -137,7 +142,11 @@
     },
     {
       "visit_date": "2026-09-10",
-      "page_views": 5
+      "page_views": 6
+    },
+    {
+      "visit_date": "2026-09-11",
+      "page_views": 2
     }
   ],
   "by_category": [
@@ -148,23 +157,23 @@
     },
     {
       "category": "음료",
-      "order_count": 10,
-      "revenue": 3700
+      "order_count": 12,
+      "revenue": 4500
     }
   ],
   "by_hour": [
     {
       "order_hour": 10,
-      "order_count": 12,
-      "revenue": 4300,
-      "revenue_share_pct": 54.43
+      "order_count": 14,
+      "revenue": 5100,
+      "revenue_share_pct": 58.62
     },
     {
       "order_hour": 17,
       "order_count": 8,
       "revenue": 3600,
-      "revenue_share_pct": 45.57
+      "revenue_share_pct": 41.38
     }
   ],
-  "pipeline_seconds": 40.557
+  "pipeline_seconds": 42.568
 }
